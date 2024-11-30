@@ -1,5 +1,5 @@
+use std::str::Utf8Error;
 use crate::{MAGIC, ENTRY_NAME_LEN_MAX};
-use std::string::FromUtf8Error;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -9,9 +9,9 @@ pub enum BrArchiveError {
     #[error("Unsupported Archive Version {0}")]
     UnsupportedVersion(u32),
     #[error("Entry Name too long! Got {0} bytes, maximum {ENTRY_NAME_LEN_MAX}")]
-    EntryNameTooLong(u8),
+    EntryNameTooLong(usize),
     #[error(transparent)]
-    Utf8Error(#[from] FromUtf8Error),
+    Utf8Error(#[from] Utf8Error),
     #[error(transparent)]
     IOError(#[from] std::io::Error),
 }
