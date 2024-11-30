@@ -1,8 +1,7 @@
 use std::collections::BTreeMap;
-use std::fs;
 
 #[test]
-fn brarchive_recipes() {
+fn brarchive_recipe() {
     let archive_result = brarchive::deserialize(include_bytes!("recipes.brarchive"));
 
     let archive_correct = Ok(BTreeMap::from([(
