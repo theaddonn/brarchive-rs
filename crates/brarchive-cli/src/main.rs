@@ -30,8 +30,8 @@ fn main() {
                 error!("Failed to check if output directory exists \"{}\": {}", path.display(), err);
                 exit(1);
             });
-            
-            if exists && !out.is_dir() { 
+
+            if exists && !out.is_dir() {
                 error!("Output directory \"{}\" already exists", out.display());
                 exit(1);
             }
@@ -45,7 +45,7 @@ fn main() {
                 error!("Failed to check if input directory exists \"{}\": {}", path.display(), err);
                 exit(1);
             });
-            
+
             if !exists {
                 error!("Input directory \"{}\" does not exist", path.display());
                 exit(1);
@@ -56,9 +56,9 @@ fn main() {
                     error!("Failed to read directory \"{}\": {}", path.display(), &err);
                     exit(1);
                 });
-                
+
                 let mut dir_entries = BTreeMap::new();
-                
+
                 for entry in read_dir {
                     let entry = entry.unwrap_or_else(|err| {
                         error!("Failed to read directory entry of \"{}\": {}", path.display(), err);
@@ -82,21 +82,21 @@ fn main() {
 
                     dir_entries.insert(entry_name.to_string(), content);
                 }
-                
+
                 dir_entries
-            } else if path.is_file() { 
+            } else if path.is_file() {
                 let content = fs::read_to_string(&path).unwrap_or_else(|err| {
                     error!("Failed to read file \"{}\": {}", path.display(), &err);
                     exit(1);
                 });
-                
+
                 let entry_name = path.file_name().and_then(OsStr::to_str).unwrap_or_else(|| {
                     error!("Failed to convert file path to UTF-8: {}", path.display());
                     exit(1);
                 }).to_string();
-                
+
                 BTreeMap::from([(entry_name, content)])
-            } else { 
+            } else {
                 error!("Input Path is neither a file nor a folder \"{}\"", path.display());
                 exit(1);
             };
@@ -128,7 +128,7 @@ fn main() {
                 error!("Input file \"{}\" does not exist", path.display());
                 exit(1);
             }
-            
+
             let data = fs::read(&path).unwrap_or_else(|err| {
                 error!("Failed to read archive file \"{}\": {}", path.display(), err);
                 exit(1);
@@ -140,12 +140,12 @@ fn main() {
             });
 
             let exists = fs::exists(&out).unwrap_or_else(|err| {
-                error!("Failed to check if output directory exists \"{}\": {}", path.display(), err);
+                error!("Failed to check if output directory exists \"{}\": {}", out.display(), err);
                 exit(1);
             });
 
             if exists && !out.is_dir() {
-                error!("Output directory \"{}\" already exists and is not a directory", path.display());
+                error!("Output directory \"{}\" already exists and is not a directory", out.display());
                 exit(1);
             }
 
@@ -153,7 +153,7 @@ fn main() {
 
             if let Some(contents) = directory_contents {
                 if contents.count() > 0 || exists {
-                    error!("Output directory \"{}\" already exists and is not empty", path.display());
+                    error!("Output directory \"{}\" already exists and is not empty", out.display());
                     exit(1);
                 }
             }
