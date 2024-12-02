@@ -23,27 +23,42 @@ fn main() {
 
             let out = out.unwrap_or(extract_file_name(&path).unwrap_or(PathBuf::from("brarchive")));
             let out = add_extension_if_missing(out, "brarchive");
-            
+
             info!("Beginning to encode \"{}\" into \"{}\" archive", &path.display(), out.display());
+
+            let exists = fs::exists(&out).unwrap_or_else(|err| {
+                error!("Failed to check if output directory exists \"{}\": {}", path.display(), err);
+                exit(1);
+            });
+            
+            if exists && !out.is_dir() { 
+                error!("The output directory \"{}\" already exists", out.display());
+                exit(1);
+            }
+
+            if exists && !out.is_file() {
+                error!("The output file \"{}\" already exists", out.display());
+                exit(1);
+            }
             
             let read_dir = fs::read_dir(&path).unwrap_or_else(|err| {
                 error!("Failed to read directory \"{}\": {}", path.display(), &err);
                 exit(1);
             });
-            
+
             let mut dir_entries = BTreeMap::new();
-            
+
             for entry in read_dir {
                 let entry = entry.unwrap_or_else(|err| {
                     error!("Failed to read directory entry of \"{}\": {}", path.display(), err);
                     exit(1);
                 });
-                
-                let content = fs::read_to_string(&entry.path()).unwrap_or_else(|err| {
+
+                let content = fs::read_to_string(entry.path()).unwrap_or_else(|err| {
                     error!("Failed to read file \"{}\": {}", entry.path().display(), err);
                     exit(1);
                 });
-                
+
                 let entry_name = entry.path();
                 let entry_name = entry_name.strip_prefix(&path).unwrap_or_else(|err| {
                     error!("Failed to strip prefix from \"{}\": {}", entry.path().display(), err);
@@ -53,15 +68,15 @@ fn main() {
                     error!("Failed to convert file path to UTF-8: {}", entry.path().display());
                     exit(1);
                 });
-                
+
                 dir_entries.insert(entry_name.to_string(), content);
             }
-            
+
             let archive = brarchive::serialize(dir_entries).unwrap_or_else(|err| {
                 error!("Failed to encode directory entries \"{}\": {}", err, path.display());
                 exit(1);
             });
-            
+
             fs::write(&out, &archive).unwrap_or_else(|err| {
                 error!("Failed to write archive \"{}\": {}", out.display(), err);
             });
@@ -91,7 +106,7 @@ fn main() {
             });
 
             if exists && !out.is_dir() {
-                error!("The output directory \"{}\" exist and is not a directory", path.display());
+                error!("The output directory \"{}\" already exists and is not a directory", path.display());
                 exit(1);
             }
 
