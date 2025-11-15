@@ -11,8 +11,6 @@ pub(crate) mod ser;
 pub(crate) const MAGIC: u64 = 0x267052A0B125277D;
 pub(crate) const VERSIONS: [u32; 1] = [1];
 pub(crate) const ENTRY_NAME_LEN_MAX: usize = 247;
-pub(crate) const HEADER_SIZE: usize = 16;
-pub(crate) const ENTRY_SIZE: usize = 256;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub(crate) struct Header {
@@ -27,11 +25,12 @@ pub(crate) struct EntryDescriptor<'a> {
     pub contents_len: u32,
 }
 
-pub fn serialize(data: impl IntoIterator<Item = (String, String)>) -> Result<Vec<u8>, BrArchiveError> {
+pub fn serialize(
+    data: impl IntoIterator<Item = (String, String)>
+) -> Result<Vec<u8>, BrArchiveError> {
     let data = data.into_iter().collect::<Vec<_>>();
 
     let mut buf = Vec::new();
-    let mut buf_pos = 0;
 
     let header = Header {
         entries: data.len() as u32,
@@ -39,17 +38,25 @@ pub fn serialize(data: impl IntoIterator<Item = (String, String)>) -> Result<Vec
     };
 
     write_header(&mut buf, &header)?;
-    buf_pos += HEADER_SIZE;
-    buf_pos += ENTRY_SIZE * data.len();
+
+    let mut descriptors = Vec::with_capacity(data.len());
+    let mut current_offset: u32 = 0;
 
     for (name, content) in &data {
+        let len = content.as_bytes().len() as u32;
+
         let entry = EntryDescriptor {
             name,
-            contents_offset: buf_pos as u32,
-            contents_len: content.len() as u32,
+            contents_offset: current_offset,
+            contents_len: len,
         };
-        
-        write_entry_descriptor(&mut buf, &entry)?;
+
+        descriptors.push(entry);
+        current_offset += len;
+    }
+
+    for entry in &descriptors {
+        write_entry_descriptor(&mut buf, entry)?;
     }
 
     for (_, content) in &data {
